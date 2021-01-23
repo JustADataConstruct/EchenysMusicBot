@@ -1,4 +1,20 @@
 {
-    "test": "test.mp3",
-    "toto africa":"test2.mp3"
+    "test": {
+        "route": "test.mp3",
+        "start_point":30,
+        "end_point":35
+    },
+    "toto africa":{
+        "route":"test2.mp3",
+        "start_point":"1:20"
+    },
+    "playlist":[
+        {
+            "route":"test.mp3"
+        },
+        {
+            "route":"test2.mp3",
+            "start_point":35
+        }
+    ]
 }
