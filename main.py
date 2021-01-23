@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+import json
+
 intents = discord.Intents.default()
 description = "Music bot for the Echenys server"
 
@@ -16,6 +18,15 @@ except:
 @bot.event
 async def on_ready():
     print("Connected")
+
+songs = {}
+try:
+    with open('songs.json') as f: #TODO: Would a database work better? Probably yes.
+        s = f.read()
+        songs = json.loads(s)
+        print(songs)
+except Exception as e:
+    print(e)
 
 
 @bot.command(name="alive", description="Check if I am working correctly.")
@@ -38,12 +49,18 @@ async def leave(ctx):
     else:
         await ctx.send("I am not in voice channel.")
 
+#TODO: Playlists. (Indicate the name of a json file with all the songs?)
+
 @bot.command(name="play")
-async def play(ctx):
-    if ctx.voice_client:
-        if ctx.voice_client.is_playing():
-            ctx.voice_client.stop()
-        ctx.voice_client.play(discord.FFmpegPCMAudio('test.mp3'),after=lambda e:print('done',e))
+async def play(ctx,name:str):
+    try:
+        if ctx.voice_client:
+            if ctx.voice_client.is_playing():
+                ctx.voice_client.stop()
+            ctx.voice_client.play(discord.FFmpegPCMAudio(songs[name.lower()]),after=lambda e:print('done',e))
+            await ctx.send(f"Playing {name}")
+    except Exception:
+        await ctx.send("Song not found.")
 
 @bot.command()
 async def stop(ctx):
@@ -66,16 +83,14 @@ async def resume(ctx):
     except:
         await ctx.send("Can't resume")
 
-
-
-@bot.event
-async def on_message(message):
-    if message.author == bot.user:
-        return
-    if message.content.lower() == "hello":
-        await message.channel.send("Hi!")
-        return
-    await bot.process_commands(message)
+# @bot.event
+# async def on_message(message):
+#     if message.author == bot.user:
+#         return
+#     if message.content.lower() == "hello":
+#         await message.channel.send("Hi!")
+#         return
+#     await bot.process_commands(message)
 
 
 bot.run(token)
