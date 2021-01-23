@@ -56,10 +56,13 @@ async def leave(ctx):
 async def play(ctx,name:str): #TODO: Check if playlist.
     try:
         if ctx.voice_client:
+            song = songs[name.lower()]
+            if type(song) == list :
+                await ctx.send("This is a playlist, not a single song. Use the 'playlist' command.")
+                return            
             if ctx.voice_client.is_playing():
                 ctx.voice_client.stop()
             options= ""
-            song = songs[name.lower()]
             route = song["route"]
             if 'start_point' in song:
                 sp = song["start_point"]
@@ -68,6 +71,7 @@ async def play(ctx,name:str): #TODO: Check if playlist.
                 ep = song["end_point"]
                 options += f" -to {ep}"
             ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:print('done',e))
+            print(f"Playing {route}")
             await ctx.send(f"Playing {name}")
     except Exception as e:
         await ctx.send("Song not found.")
@@ -76,6 +80,9 @@ async def play(ctx,name:str): #TODO: Check if playlist.
 @bot.command(name="playlist")
 async def playlist(ctx,name:str):
     try:
+        if type(songs[name.lower()]) == dict :
+            await ctx.send("This is a single song, not a playlist. Use the 'play' command.")
+            return
         for song_object in songs[name.lower()]:
             songqueue.append(song_object)
         if not ctx.voice_client.is_playing():
@@ -89,6 +96,7 @@ async def playlist(ctx,name:str):
                 ep = song["end_point"]
                 options += f" -to {ep}"            
             ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:play_next(ctx))
+            print(f"Playing {route}")            
     except Exception as e:
         print(e)
 
@@ -106,6 +114,7 @@ def play_next(ctx):
             ep = song["end_point"]
             options += f" -to {ep}"            
         ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:play_next(ctx))
+        print(f"Playing {route}")        
     else:
         print("end of playlist.")
 
