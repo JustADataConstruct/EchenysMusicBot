@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 
 import json
+import sys
 
 intents = discord.Intents.default()
 description = "Music bot for the Echenys server"
@@ -53,7 +54,7 @@ async def leave(ctx):
         await ctx.send("I am not in voice channel.")
 
 @bot.command(name="play")
-async def play(ctx,name:str): #TODO: Check if playlist.
+async def play(ctx,name:str):
     try:
         if ctx.voice_client:
             song = songs[name.lower()]
@@ -83,6 +84,7 @@ async def playlist(ctx,name:str):
         if type(songs[name.lower()]) == dict :
             await ctx.send("This is a single song, not a playlist. Use the 'play' command.")
             return
+        length = len(songs[name.lower()])
         for song_object in songs[name.lower()]:
             songqueue.append(song_object)
         if not ctx.voice_client.is_playing():
@@ -94,7 +96,8 @@ async def playlist(ctx,name:str):
                 options += f"-ss {sp}"
             if 'end_point' in song:
                 ep = song["end_point"]
-                options += f" -to {ep}"            
+                options += f" -to {ep}"
+            await ctx.send(f"Playing playlist {name}, {length} songs.")            
             ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:play_next(ctx))
             print(f"Playing {route}")            
     except Exception as e:
@@ -153,5 +156,12 @@ async def reload(ctx):
     songs = load_songs()
     print(songs)
     await ctx.send("Reloading song list.")
+
+@bot.command()
+async def disconnect(ctx):
+    await ctx.send("Bye!")
+    await bot.logout()
+    print("Bot offline.")
+
 
 bot.run(token)
