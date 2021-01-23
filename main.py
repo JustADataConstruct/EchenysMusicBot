@@ -4,7 +4,7 @@ from discord.ext import commands
 intents = discord.Intents.default()
 description = "Music bot for the Echenys server"
 
-bot = commands.Bot('!',description=description,intents=intents)
+bot = commands.Bot('valerie ',description=description,intents=intents)
 
 token = ""
 try:
@@ -37,6 +37,36 @@ async def leave(ctx):
         await ctx.voice_client.disconnect()
     else:
         await ctx.send("I am not in voice channel.")
+
+@bot.command(name="play")
+async def play(ctx):
+    if ctx.voice_client:
+        if ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
+        ctx.voice_client.play(discord.FFmpegPCMAudio('test.mp3'),after=lambda e:print('done',e))
+
+@bot.command()
+async def stop(ctx):
+    try:
+        ctx.voice_client.stop()
+    except:
+        await ctx.send("Not playing anything.")
+
+@bot.command()
+async def pause(ctx):
+    try:
+        ctx.voice_client.pause()
+    except:
+        await ctx.send("Not playing anything.")
+
+@bot.command()
+async def resume(ctx):
+    try:
+        ctx.voice_client.resume()
+    except:
+        await ctx.send("Can't resume")
+
+
 
 @bot.event
 async def on_message(message):
