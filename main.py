@@ -19,17 +19,18 @@ except:
 async def on_ready():
     print("Connected")
 
-songs = {}
+def load_songs():
+    try:
+        with open('songs.json') as f: #TODO: Would a database work better? Probably yes.
+            s = f.read()
+            sng = json.loads(s)
+            return sng
+    except Exception as e:
+        print(e)
+
+songs = load_songs()
+print(songs)
 songqueue = []
-
-try:
-    with open('songs.json') as f: #TODO: Would a database work better? Probably yes.
-        s = f.read()
-        songs = json.loads(s)
-        print(songs)
-except Exception as e:
-    print(e)
-
 
 @bot.command(name="alive", description="Check if I am working correctly.")
 async def ping(ctx):
@@ -52,7 +53,7 @@ async def leave(ctx):
         await ctx.send("I am not in voice channel.")
 
 @bot.command(name="play")
-async def play(ctx,name:str):
+async def play(ctx,name:str): #TODO: Check if playlist.
     try:
         if ctx.voice_client:
             if ctx.voice_client.is_playing():
@@ -137,14 +138,11 @@ async def skip(ctx):
     except Exception as e:
         print(e)
 
-# @bot.event
-# async def on_message(message):
-#     if message.author == bot.user:
-#         return
-#     if message.content.lower() == "hello":
-#         await message.channel.send("Hi!")
-#         return
-#     await bot.process_commands(message)
-
+@bot.command()
+async def reload(ctx):
+    global songs
+    songs = load_songs()
+    print(songs)
+    await ctx.send("Reloading song list.")
 
 bot.run(token)
