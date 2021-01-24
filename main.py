@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 import json
 import sys
@@ -12,10 +12,22 @@ class ValerieBot(commands.Cog):
         print(self.songs)
         self.songqueue = []
         self.nowplay = ""
+        self.update_status.start()
 
     @commands.Cog.listener()
     async def on_ready(self):
         print("Connected")
+
+    @tasks.loop(minutes=1)
+    async def update_status(self):
+        print(f"NOWPLAY: {self.nowplay}")
+        if self.nowplay == "":
+            return
+        elif self.nowplay == "STOP":
+            await self.bot.change_presence(activity=None)
+            self.nowplay = ""
+            return
+        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,name=self.nowplay))                
 
 
     def load_songs(self):
@@ -67,7 +79,9 @@ class ValerieBot(commands.Cog):
                     options += f" -to {ep}"
                 ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:print('done',e))
                 print(f"Playing {route}")
-                await ctx.send(f"Playing {os.path.basename(route)}")
+                self.nowplay = os.path.basename(route)
+                await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,name=self.nowplay))                 
+                await ctx.send(f"Playing {self.nowplay}")
         except Exception as e:
             await ctx.send("Song not found.")
             print(e)
@@ -93,6 +107,8 @@ class ValerieBot(commands.Cog):
                     options += f" -to {ep}"
                 await ctx.send(f"Playing playlist {name}, {length} songs.")            
                 ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:self.play_next(ctx))
+                self.nowplay = os.path.basename(route)
+                await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,name=self.nowplay)) 
                 print(f"Playing {route}")            
         except Exception as e:
             print(e)
@@ -111,14 +127,17 @@ class ValerieBot(commands.Cog):
                 ep = song["end_point"]
                 options += f" -to {ep}"            
             ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:self.play_next(ctx))
+            self.nowplay = os.path.basename(route)            
             print(f"Playing {route}")        
         else:
             print("end of playlist.")
+            self.nowplay = "STOP"
 
     @commands.command()
     async def stop(self,ctx):
         try:
             self.songqueue.clear()
+            await self.bot.change_presence(activity=None)
             ctx.voice_client.stop()
         except:
             await ctx.send("Not playing anything.")
@@ -140,6 +159,9 @@ class ValerieBot(commands.Cog):
     @commands.command()
     async def skip(self,ctx):
         try:
+            route = self.songqueue[1]["route"]
+            self.nowplay = os.path.basename(route)
+            await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,name=self.nowplay))            
             ctx.voice_client.stop()
         except Exception as e:
             print(e)
