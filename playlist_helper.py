@@ -34,8 +34,6 @@ for m in playlist:
 
 print(olist)
 
-#TODO: playlist name.
-
 with open("export_playlist.json","w") as o:
     o.write(f'"{name}":{json.dumps(olist,indent=4)}')
 
