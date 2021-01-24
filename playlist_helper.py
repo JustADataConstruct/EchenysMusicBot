@@ -9,15 +9,15 @@ from os.path import isfile,join,abspath
 
 
 def print_usage():
-    print("Usage: playlist.helper.py [MUSIC FOLDER PATH]")
+    print("Usage: playlist.helper.py [MUSIC FOLDER PATH] [PLAYLIST NAME]")
 
 #TODO: Error handling.
-
-if len(sys.argv) == 1 :
+if len(sys.argv) < 3 :
     print_usage()
     sys.exit()
 
 folder = sys.argv[1]
+name = sys.argv[2]
 playlist = []
 
 import glob
@@ -34,8 +34,10 @@ for m in playlist:
 
 print(olist)
 
+#TODO: playlist name.
+
 with open("export_playlist.json","w") as o:
-    o.write(json.dumps(olist,indent=4))
+    o.write(f'"{name}":{json.dumps(olist,indent=4)}')
 
 print("Playlist exported! Check your active folder for the export_playlist.json file, and paste its contents into the songs.json file")
 input("Press any key to close")
