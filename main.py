@@ -66,18 +66,21 @@ class ValerieBot(commands.Cog):
                 song = self.songs[name.lower()]
                 if type(song) == list :
                     await ctx.send("This is a playlist, not a single song. Use the 'playlist' command.")
-                    return            
+                    return
+                route = song["route"]
+                if os.path.exists(route) == False:
+                    await ctx.send(f"The song '{name}' exists on your songs.json file, but I can't find the file '{route}'. Is the route correct?")
+                    return
                 if ctx.voice_client.is_playing():
                     ctx.voice_client.stop()
                 options= ""
-                route = song["route"]
                 if 'start_point' in song:
                     sp = song["start_point"]
                     options += f"-ss {sp}"
                 if 'end_point' in song:
                     ep = song["end_point"]
                     options += f" -to {ep}"
-                ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:print('done',e))
+                    ctx.voice_client.play(discord.FFmpegPCMAudio(route,options=options),after=lambda e:print('done',e))
                 print(f"Playing {route}")
                 self.nowplay = os.path.basename(route)
                 await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.listening,name=self.nowplay))                 
@@ -99,6 +102,10 @@ class ValerieBot(commands.Cog):
                 options = ""
                 song = self.songqueue[0]
                 route = song["route"]
+                if os.path.exists(route) == False:
+                    await ctx.send(f"The song '{name}' exists on your songs.json file, but I can't find the file '{route}' and I will skip it. Is the route correct?")
+                    self.play_next(ctx)
+                    return
                 if 'start_point' in song:
                     sp = song["start_point"]
                     options += f"-ss {sp}"
@@ -120,6 +127,10 @@ class ValerieBot(commands.Cog):
             options = ""
             song = self.songqueue[0]
             route = song["route"]
+            if os.path.exists(route) == False:
+                print(f"I can't find the file '{route}' and I will skip it. Is the route correct?")
+                self.play_next(ctx)
+                return            
             if 'start_point' in song:
                 sp = song["start_point"]
                 options += f"-ss {sp}"
